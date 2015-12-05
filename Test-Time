@@ -1,0 +1,35 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+/**
+ * Created by jenny on 11/27/2015.
+ */
+public class TestTime extends OpMode{
+    double StartTime;
+    public TestTime(){
+
+    }
+
+    @Override
+    public void init() {
+        StartTime = time;
+    }
+
+    @Override
+    public void loop() {
+        telemetry.addData("Times", String.format("%.2f", StartTime)+String.format("%.2f", time));
+        if (time > 10){
+           telemetry.addData("aksdfjl", "After 10 seconds");
+        }
+        if (time > 5){
+            telemetry.addData("Yay", "Whoooooohooooo!");
+        }
+    }
+
+    @Override
+    public void stop() {
+
+    }
+}
