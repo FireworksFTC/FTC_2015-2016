@@ -1,0 +1,72 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.LightSensor;
+import com.qualcomm.robotcore.util.Range;
+
+/**
+ * Created by appx on 10/23/15.
+ */
+public class TestColorSensor extends OpMode {
+
+    DcMotor motorRight;
+    DcMotor motorLeft;
+    LightSensor lSensorR, lSensorL;
+
+    float leftPower, rightPower;
+    final double maxJoystickValue = 1.414;
+    final double MEASURING_TIME = 2.0;
+    double startTime;
+
+    int lightRaw, totalLight, avgLight = 0, count;
+    boolean isScanningForLight;
+
+    public TestColorSensor(){
+
+    }
+
+    public void init(){
+        motorRight = hardwareMap.dcMotor.get("motor_2");
+        motorLeft = hardwareMap.dcMotor.get("motor_1");
+        motorRight.setDirection(DcMotor.Direction.REVERSE);
+
+        lSensorL = hardwareMap.lightSensor.get("light_sensor_left");
+        lSensorR = hardwareMap.lightSensor.get("light_sensor_right");
+
+        isScanningForLight = false;
+    }
+
+    public void loop(){
+        telemetry.addData("Time ", String.format("%.2f", time));
+
+        //lower numbers = brighter light
+        //blue is higher than red (but only slightly)
+        lightRaw = lSensorR.getLightDetectedRaw();
+        if(gamepad2.x == true){
+            if(isScanningForLight == false) {
+                isScanningForLight = true;
+                startTime = time;
+                count = 0;
+                totalLight = 0;
+            }
+        }
+        if(isScanningForLight == true){
+            telemetry.addData("Light Time: ", String.format("%.2f", time)+" "+String.format("%.2f", startTime));
+            totalLight += lSensorR.getLightDetectedRaw();
+            count++;
+
+            if (time > startTime+MEASURING_TIME){
+                isScanningForLight = false;
+                avgLight = totalLight/count;
+            }
+        }
+
+        telemetry.addData("Average Light: ", String.format("%d", avgLight));
+    }
+
+    public void stop(){
+
+    }
+
+}
