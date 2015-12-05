@@ -1,13 +1,8 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.hardware.HiTechnicNxtDcMotorController;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.util.Range;
-import android.graphics.Color;
 
 /**
  * Created by appx on 10/23/15.
@@ -17,14 +12,9 @@ public class TestTeleOp extends OpMode {
 
     DcMotor motorRight;
     DcMotor motorLeft;
-//    LightSensor lSensor;
-     ColorSensor cSensor;
 
     float leftPower, rightPower;
     final double maxJoystickValue = 1.414;
-
-    float hsvValues[] = {0,0,0};
-    final float values[] = hsvValues;
 
     public TestTeleOp(){
 
@@ -34,10 +24,6 @@ public class TestTeleOp extends OpMode {
         motorRight = hardwareMap.dcMotor.get("motor_2");
         motorLeft = hardwareMap.dcMotor.get("motor_1");
         motorRight.setDirection(DcMotor.Direction.REVERSE);
-
-//        lSensor = hardwareMap.lightSensor.get("light_sensor");
-        //cSensor = hardwareMap.colorSensor.get("color_sensor");
-
     }
 
     public void loop(){
@@ -56,20 +42,6 @@ public class TestTeleOp extends OpMode {
         motorLeft.setPower((double)leftPower);
         motorRight.setPower((double)rightPower);
         telemetry.addData("Powers", "Left: "+String.format("%.2f", leftPower) + " " + "Right: "+String.format("%.2f", rightPower));
-
-        //light sensor
-        Color.RGBToHSV(cSensor.red(), cSensor.green(), cSensor.blue(), hsvValues);
-
-//        telemetry.addData("Color Sensor", "Blue: "+String.format("%d", cSensor.blue())+
-//                " Red: "+String.format("%d", cSensor.red())+
-//                " Green: "+String.format("%d", cSensor.green())+
-//                " Alpha: "+String.format("%d", cSensor.alpha())+
-//                " argb: "+String.format("%d", cSensor.argb()));
-//        telemetry.addData("Clear", cSensor.alpha());
-        telemetry.addData("Red  ", cSensor.red());
-        telemetry.addData("Green", cSensor.green());
-        telemetry.addData("Blue ", cSensor.blue());
-        telemetry.addData("Hue", hsvValues[0]);
     }
 
     public void stop(){
