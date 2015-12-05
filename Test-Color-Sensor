@@ -13,9 +13,7 @@ public class TestColorSensor extends OpMode {
     DcMotor motorRight;
     DcMotor motorLeft;
     LightSensor lSensorR, lSensorL;
-
-    float leftPower, rightPower;
-    final double maxJoystickValue = 1.414;
+    
     final double MEASURING_TIME = 2.0;
     double startTime;
 
@@ -27,10 +25,6 @@ public class TestColorSensor extends OpMode {
     }
 
     public void init(){
-        motorRight = hardwareMap.dcMotor.get("motor_2");
-        motorLeft = hardwareMap.dcMotor.get("motor_1");
-        motorRight.setDirection(DcMotor.Direction.REVERSE);
-
         lSensorL = hardwareMap.lightSensor.get("light_sensor_left");
         lSensorR = hardwareMap.lightSensor.get("light_sensor_right");
 
