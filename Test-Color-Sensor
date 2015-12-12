@@ -13,12 +13,14 @@ public class TestColorSensor extends OpMode {
     DcMotor motorRight;
     DcMotor motorLeft;
     LightSensor lSensorR, lSensorL;
-    
+
     final double MEASURING_TIME = 2.0;
     double startTime;
 
-    int lightRaw, totalLight, avgLight = 0, count;
+    int totalLightL, avgLightL = 0, countL;
+    int totalLightR, avgLightR = 0, countR;
     boolean isScanningForLight;
+    String redLight = "N/A";
 
     public TestColorSensor(){
 
@@ -31,32 +33,52 @@ public class TestColorSensor extends OpMode {
         isScanningForLight = false;
     }
 
+    //subtract 20 from lSensorL make an approximate ratio (calibration)
+    public void init_loop(){
+
+    }
+
     public void loop(){
         telemetry.addData("Time ", String.format("%.2f", time));
 
         //lower numbers = brighter light
         //blue is higher than red (but only slightly)
-        lightRaw = lSensorR.getLightDetectedRaw();
         if(gamepad2.x == true){
             if(isScanningForLight == false) {
                 isScanningForLight = true;
                 startTime = time;
-                count = 0;
-                totalLight = 0;
+                countR = 0;
+                totalLightR = 0;
+                countL = 0;
+                totalLightL = 0;
             }
         }
         if(isScanningForLight == true){
             telemetry.addData("Light Time: ", String.format("%.2f", time)+" "+String.format("%.2f", startTime));
-            totalLight += lSensorR.getLightDetectedRaw();
-            count++;
+            totalLightR += lSensorR.getLightDetectedRaw();
+            totalLightL += lSensorL.getLightDetectedRaw();
+            countR++;
+            countL++;
 
             if (time > startTime+MEASURING_TIME){
                 isScanningForLight = false;
-                avgLight = totalLight/count;
+                avgLightR = totalLightR/countR;
+                avgLightL = (totalLightL/countL) - 20; //-20 for calibration
+
+                if(avgLightL > avgLightR){
+                    redLight = "Right";
+                }
+                if (avgLightL < avgLightR){
+                    redLight = "Left";
+                }
+                if (avgLightL == avgLightR){
+                    redLight = "Error: They're the same";
+                }
             }
         }
 
-        telemetry.addData("Average Light: ", String.format("%d", avgLight));
+        telemetry.addData("Average Light", "Right-"+String.format("%d", avgLightR) + " " + "Left-"+String.format("%d", avgLightL));
+        telemetry.addData("Red Light is", redLight);
     }
 
     public void stop(){
