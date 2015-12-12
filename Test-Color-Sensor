@@ -1,17 +1,13 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.LightSensor;
-import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by appx on 10/23/15.
  */
 public class TestColorSensor extends OpMode {
-
-    DcMotor motorRight;
-    DcMotor motorLeft;
+    
     LightSensor lSensorR, lSensorL;
 
     final double MEASURING_TIME = 2.0;
