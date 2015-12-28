@@ -1,0 +1,99 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.ftccommon.DbgLog;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CompassSensor;
+import com.qualcomm.robotcore.hardware.UltrasonicSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+public class CompassCalibration extends OpMode {
+
+  // how long to hold before the next action
+  final static double HOLD_POSITION = 3.0; // in seconds
+
+  // wheel speed
+  final static double MOTOR_POWER = 0.2; // scale from 0 to 1
+
+  // Turn around at least twice in 20 seconds.
+  private double turnTime = 20.0;
+
+  private boolean keepTurning = true;
+  private boolean returnToMeasurementMode = false;
+  private boolean monitorCalibrationSuccess = false;
+
+  // when paused time as passed, we will switch back to measurement mode.
+  double pauseTime = 2.0;
+
+  CompassSensor compass;
+  UltrasonicSensor ultrasonicSensor;
+  DcMotor motorRight;
+  DcMotor motorLeft;
+  double degree;
+  double leftPower;
+  double rightPower;
+  boolean turned;
+
+  @Override
+  public void init() {
+    compass = hardwareMap.compassSensor.get("compass");
+    motorRight = hardwareMap.dcMotor.get("motor_2");
+    motorLeft = hardwareMap.dcMotor.get("motor_1");
+    motorRight.setDirection(DcMotor.Direction.REVERSE);
+    turned = false;
+  }
+
+  @Override
+  public void init_loop() {
+
+
+    // Set the compass to calibration mode
+    // compass.setMode(CompassSensor.CompassMode.CALIBRATION_MODE);
+    telemetry.addData("Compass", "Compass in calibration mode");
+
+    // calculate how long we should hold the current position
+    pauseTime = time + HOLD_POSITION;
+  }
+
+  @Override
+  public void loop() {
+    degree = compass.getDirection(); //get degree value from compass sensor
+    telemetry.addData("Degree", "Degree of robot" + degree); //printing the degree of robot
+    if (this.time < 2) { //if less than 2 seconds then go on low power in both motors
+      rightPower = 0.15;
+      leftPower = 0.15;
+
+    } else if (degree > 180 && turned == false) { // if time more than or equal to 2 seconds then if robot direction is more than 180 degrees then turn left
+      rightPower = -0.15;
+      leftPower = 0.15;
+
+    } else if (degree < 45 && turned == false) { // if robot direction is less than 45 degrees then turn left
+      rightPower = -0.15;
+      leftPower = 0.15;
+    } else if (degree > 45 && degree < 180 && turned == false) { //if robot direction is more than 45 degrees and less than 180 degrees then go forward
+      rightPower = 0.15;
+      leftPower = 0.15;
+      turned = true;
+    } else if (this.time > 3 && this.time < 7) {
+      rightPower = 0.15;
+      leftPower = 0.15;
+    } else if (this.time >= 6 && degree <= 80) {
+      rightPower = -0.10;
+      leftPower = 0.10;
+    }
+    else {
+      rightPower = 0;
+      leftPower = 0;
+    }
+
+
+
+
+    motorRight.setPower(rightPower);
+    motorLeft.setPower(leftPower);
+
+    ///private String calibrationMessageToString(boolean failed) {
+    ///if (failed) { return "Calibration Failed!"; }
+    ///else { return "Calibration Succeeded." ; }
+    ///}
+  }
+}
