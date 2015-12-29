@@ -32,14 +32,19 @@ public class CompassCalibration extends OpMode {
   double leftPower;
   double rightPower;
   boolean turned;
+  boolean inFront;
+  boolean reachedBeacon;
 
   @Override
   public void init() {
     compass = hardwareMap.compassSensor.get("compass");
+    ultrasonicSensor = hardwareMap.ultrasonicSensor.get("ultrasonic_sensor");
     motorRight = hardwareMap.dcMotor.get("motor_2");
     motorLeft = hardwareMap.dcMotor.get("motor_1");
     motorRight.setDirection(DcMotor.Direction.REVERSE);
     turned = false;
+    inFront = false;
+    reachedBeacon = false;
   }
 
   @Override
@@ -62,23 +67,38 @@ public class CompassCalibration extends OpMode {
       rightPower = 0.15;
       leftPower = 0.15;
 
-    } else if (degree > 180 && turned == false) { // if time more than or equal to 2 seconds then if robot direction is more than 180 degrees then turn left
+    } else if (degree > 180 && !turned) { // if time more than or equal to 2 seconds then if robot direction is more than 180 degrees then turn left
       rightPower = -0.15;
       leftPower = 0.15;
 
-    } else if (degree < 45 && turned == false) { // if robot direction is less than 45 degrees then turn left
+    } else if (degree < 45 && !turned) { // if robot direction is less than 45 degrees then turn left
       rightPower = -0.15;
       leftPower = 0.15;
-    } else if (degree > 45 && degree < 180 && turned == false) { //if robot direction is more than 45 degrees and less than 180 degrees then go forward
+    } else if (degree >= 45 && degree < 180 && !turned) { //if robot direction is more than 45 degrees and less than 180 degrees then go forward
       rightPower = 0.15;
       leftPower = 0.15;
       turned = true;
-    } else if (this.time > 3 && this.time < 7) {
+    } else if (this.time > 3 && this.time < 6.5 && turned) { //if time between 3 and 6.5 sec then go forward
       rightPower = 0.15;
       leftPower = 0.15;
-    } else if (this.time >= 6 && degree <= 80) {
-      rightPower = -0.10;
+    } else if (this.time > 6.5 && this.time <7.2) {
+      rightPower = -0.15;
+      leftPower = 0.15;
+      inFront = true;
+    } else if (inFront == true && !reachedBeacon && ultrasonicSensor.getUltrasonicLevel()>5){
+      rightPower = 0.10;
       leftPower = 0.10;
+      telemetry.addData("ultrasonicDistance",ultrasonicSensor.getUltrasonicLevel());
+      reachedBeacon = true;
+    }else if (this.time >=10 && this.time <12 && reachedBeacon){
+      rightPower = -0.20;
+      leftPower = -0.20;
+    }else if (this.time >=12 && this.time <12.7 && reachedBeacon){
+      rightPower =-0.15;
+      leftPower =0.15;
+    }else if (this.time >=12.7 && this.time <20 && reachedBeacon){
+      rightPower =0.35;
+      leftPower =0.35;
     }
     else {
       rightPower = 0;
@@ -86,14 +106,8 @@ public class CompassCalibration extends OpMode {
     }
 
 
-
-
     motorRight.setPower(rightPower);
     motorLeft.setPower(leftPower);
 
-    ///private String calibrationMessageToString(boolean failed) {
-    ///if (failed) { return "Calibration Failed!"; }
-    ///else { return "Calibration Succeeded." ; }
-    ///}
   }
 }
