@@ -3,20 +3,27 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * Created by appx on 10/23/15.
  */
-public class TestTeleOp extends OpMode {
+public class MainTeleOp extends OpMode {
 
 
     DcMotor motorRight;
     DcMotor motorLeft;
+    Servo servo1, servo2;
 
     float leftPower, rightPower;
-    final double maxJoystickValue = 1.414;
+    final double MAX_JOYSTICK_VALUE = 1.414;
 
-    public TestTeleOp(){
+    boolean isDoorUp = false;
+    double doorWait;
+
+    double position = -1;
+
+    public MainTeleOp(){
 
     }
 
@@ -24,6 +31,18 @@ public class TestTeleOp extends OpMode {
         motorRight = hardwareMap.dcMotor.get("motor_2");
         motorLeft = hardwareMap.dcMotor.get("motor_1");
         motorRight.setDirection(DcMotor.Direction.REVERSE);
+
+        servo1 = hardwareMap.servo.get("servo_1");
+        servo2 = hardwareMap.servo.get("servo_2");
+        servo1.setDirection(Servo.Direction.REVERSE);
+//        initDoorDirection = motorDoor.getDirection();
+
+
+    }
+
+    public void init_loop(){
+//        servo1.setPosition(0.5);
+//        servo2.setPosition(0.5);
     }
 
     public void loop(){
@@ -42,6 +61,21 @@ public class TestTeleOp extends OpMode {
         motorLeft.setPower((double)leftPower);
         motorRight.setPower((double)rightPower);
         telemetry.addData("Powers", "Left: "+String.format("%.2f", leftPower) + " " + "Right: "+String.format("%.2f", rightPower));
+
+        if (gamepad1.a == true && doorWait < time){
+            if (isDoorUp == true){
+                isDoorUp = false;
+                servo1.setPosition(0.46);
+                servo2.setPosition(0.46);
+                doorWait = time + 1;
+            } else {
+                isDoorUp = true;
+                servo1.setPosition(0.53);
+                servo2.setPosition(0.53);
+                doorWait = time + 1;
+            }
+        }
+
     }
 
     public void stop(){
@@ -53,7 +87,7 @@ public class TestTeleOp extends OpMode {
                 0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
 
         // get the corresponding index for the scaleInput array.
-        int index = (int) ((dVal/maxJoystickValue) * 16.0); //number is now <= 1
+        int index = (int) ((dVal/MAX_JOYSTICK_VALUE) * 16.0); //number is now <= 1
 
         // index should be positive.
         if (index < 0) {
