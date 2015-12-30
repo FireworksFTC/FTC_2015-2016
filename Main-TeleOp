@@ -29,7 +29,7 @@ public class MainTeleOp extends OpMode {
     public void init(){
         motorRight = hardwareMap.dcMotor.get("motor_2");
         motorLeft = hardwareMap.dcMotor.get("motor_1");
-        motorRight.setDirection(DcMotor.Direction.REVERSE);
+        motorLeft.setDirection(DcMotor.Direction.REVERSE);
 
         servo1 = hardwareMap.servo.get("servo_1");
         servo2 = hardwareMap.servo.get("servo_2");
@@ -99,5 +99,4 @@ public class MainTeleOp extends OpMode {
         // return scaled value.
         return dScale;
     }
-
 }
