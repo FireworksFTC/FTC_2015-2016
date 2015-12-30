@@ -151,12 +151,12 @@ public class CompassCalibration extends OpMode {
           if(avgLightL > avgLightR){ //the red light is on the right
 
             //add how to press the button with a finger
-
+            return 1;
           }
           if (avgLightL < avgLightR){ //the red light is on the left
 
             //add how to press the button with a finger
-
+            return 1;
           }
         }
 
@@ -164,20 +164,22 @@ public class CompassCalibration extends OpMode {
           if(avgLightL < avgLightR){ //the blue light is on the right
 
             //add how to press the button with a finger
-
+            return 1;
           }
           if (avgLightL > avgLightR){ //the blue light is on the left
 
             //add how to press the button with a finger
-
+            return 1;
           }
         }
-       
+
         if (avgLightL == avgLightR){ //no decision made
 
           //add how to deal with failure
-
+          return 1;
         }
+      } else {
+        return -1;
       }
     }
   }
