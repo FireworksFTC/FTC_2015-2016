@@ -1,35 +1,32 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
+import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CompassSensor;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.LightSensor;
 
 public class CompassCalibration extends OpMode {
+
   CompassSensor compass;
   UltrasonicSensor ultrasonicSensor;
   DcMotor motorRight;
   DcMotor motorLeft;
-  Servo servo1, servo2;
-  LightSensor lSensorR, lSensorL;
-
   double degree;
   double leftPower;
   double rightPower;
   boolean turned;
   boolean inFront;
   boolean reachedBeacon;
-  boolean isDoorUp;
+  LightSensor lSensorR, lSensorL;
+  final double MEASURING_TIME = 2.0;
   double lightStartTime;
-
-  int totalLightL, avgLightL = 0, countL;
-  int totalLightR, avgLightR = 0, countR;
+  int totalLightL, avgLightL = 0, count;
+  int totalLightR, avgLightR = 0;
   boolean isScanningForLight;
   String desiredLight = "red";
-
-  final double MEASURING_TIME = 2.0;
+  int pushLight = -1;
 
   @Override
   public void init() {
@@ -38,22 +35,12 @@ public class CompassCalibration extends OpMode {
     motorRight = hardwareMap.dcMotor.get("motor_2");
     motorLeft = hardwareMap.dcMotor.get("motor_1");
     motorRight.setDirection(DcMotor.Direction.REVERSE);
-    servo1 = hardwareMap.servo.get("servo_1");
-    servo2 = hardwareMap.servo.get("servo_2");
-    servo1.setDirection(Servo.Direction.REVERSE);
     lSensorL = hardwareMap.lightSensor.get("light_sensor_left");
     lSensorR = hardwareMap.lightSensor.get("light_sensor_right");
-
-    isScanningForLight = false;
     turned = false;
     inFront = false;
     reachedBeacon = false;
-    isDoorUp = false;
-  }
-
-  @Override
-  public void init_loop() {
-
+    isScanningForLight = false;
   }
 
   @Override
@@ -87,100 +74,83 @@ public class CompassCalibration extends OpMode {
       leftPower = 0.10;
       telemetry.addData("ultrasonicDistance",ultrasonicSensor.getUltrasonicLevel());
       reachedBeacon = true;
-    }else if (this.time >=10 && this.time <12 && reachedBeacon){
-      rightPower = -0.20;
-      leftPower = -0.20;
-    }else if (this.time >=12 && this.time <12.7 && reachedBeacon){
-      rightPower =-0.15;
-      leftPower =0.15;
-    }else if (this.time >=12.7 && this.time <20 && reachedBeacon){
-      rightPower =0.35;
-      leftPower =0.35;
-    }
-    else {
+    } else if (reachedBeacon == true && this.time >8 && this.time <10){
+      rightPower = 0;
+      leftPower = 0;
+      pushLight = pushLight();
+      if (pushLight <0){
+        ; //wait for scanning to end
+      } else if (pushLight ==1){
+        rightPower = -0.10;
+        leftPower = 0.10;
+      } else if (pushLight ==2){
+        rightPower = 0.10;
+        leftPower = -0.10;
+      }
+    } else {
       rightPower = 0;
       leftPower = 0;
     }
-
 
     motorRight.setPower(rightPower);
     motorLeft.setPower(leftPower);
 
   }
 
-  //makes the door come up
-  void doorUp(){
-    servo1.setPosition(0.53);
-    servo2.setPosition(0.53);
-  }
-
-  //makes the door go down
-  void doorDown(){
-    servo1.setPosition(0.46);
-    servo2.setPosition(0.46);
-  }
-
-  //usage of this method:
-  /*
-      while (pushLight() < 0){
-        ; //wait for scanning to end
-      }
-   */
-  int pushLight(){
-    if(isScanningForLight == false) {
+  int pushLight() {
+    if (isScanningForLight == false) {
       isScanningForLight = true;
       lightStartTime = time;
-      countR = 0;
+      count = 0;
       totalLightR = 0;
-      countL = 0;
       totalLightL = 0;
     }
 
-    if(isScanningForLight == true){
-      totalLightR += lSensorR.getLightDetectedRaw();
+    if (isScanningForLight == true) {
+      totalLightR += lSensorR.getLightDetectedRaw(); //blue light is > than red light
       totalLightL += lSensorL.getLightDetectedRaw();
-      countR++;
-      countL++;
+      count++;
 
-      if (time > lightStartTime+MEASURING_TIME){
+      if (time > lightStartTime + MEASURING_TIME) {
         isScanningForLight = false;
-        avgLightR = totalLightR/countR;
-        avgLightL = (totalLightL/countL) - 20; //-20 for calibration
+        avgLightR = totalLightR / count;
+        avgLightL = (totalLightL / count) - 20; //-20 for calibration
 
-        if (desiredLight.toLowerCase().equals("red")){
-          if(avgLightL > avgLightR){ //the red light is on the right
-
-            //add how to press the button with a finger
-            return 1;
-          }
-          if (avgLightL < avgLightR){ //the red light is on the left
+        if (desiredLight.toLowerCase().equals("red")) {
+          if (avgLightL > avgLightR) { //the red light is on the right
 
             //add how to press the button with a finger
             return 1;
           }
-        }
-
-        if (desiredLight.toLowerCase().equals("blue")){
-          if(avgLightL < avgLightR){ //the blue light is on the right
-
+          if (avgLightL < avgLightR) { //the red light is on the left
             //add how to press the button with a finger
-            return 1;
-          }
-          if (avgLightL > avgLightR){ //the blue light is on the left
 
-            //add how to press the button with a finger
-            return 1;
+            return 2;
           }
         }
 
-        if (avgLightL == avgLightR){ //no decision made
+        if (desiredLight.toLowerCase().equals("blue")) {
+          if (avgLightL < avgLightR) { //the blue light is on the right
 
+            //add how to press the button with a finger
+            return 1;
+          }
+          if (avgLightL > avgLightR) { //the blue light is on the left
+
+            //add how to press the button with a finger
+            return 2;
+          }
+        }
+
+        if (avgLightL == avgLightR) { //no decision made
           //add how to deal with failure
-          return 1;
+          return 0;
         }
       } else {
         return -1;
       }
     }
+
+    return  0;
   }
 }
