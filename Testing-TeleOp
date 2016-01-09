@@ -1,0 +1,124 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
+
+/**
+ * Created by appx on 10/23/15.
+ */
+public class TestTeleOp extends OpMode {
+
+
+    DcMotor motorRight, motorLeft;
+    DcMotor motorSpoolHeight, motorSpoolLength;
+    Servo servoDropper, servoZiplineRed, servoZiplineBlue;
+
+    float leftPower, rightPower;
+    float spoolHPower, spoolLPower;
+    final double MAX_JOYSTICK_VALUE = 1.414;
+
+//    final double MAX_ZIPLINE_VALUE = ;
+
+    boolean isDropperDown;
+
+    public TestTeleOp(){
+
+    }
+
+    public void init(){
+//        motorRight = hardwareMap.dcMotor.get("motor_2");
+//        motorLeft = hardwareMap.dcMotor.get("motor_1");
+//        motorRight.setDirection(DcMotor.Direction.REVERSE);
+        motorRight = hardwareMap.dcMotor.get("motor_spool");
+        motorLeft = hardwareMap.dcMotor.get("motor_angle");
+
+//        motorSpoolHeight = hardwareMap.dcMotor.get("motor_spool_height");
+//        motorSpoolLength = hardwareMap.dcMotor.get("motor_spool_length");
+        motorSpoolHeight = hardwareMap.dcMotor.get("motor_2");
+        motorSpoolLength = hardwareMap.dcMotor.get("motor_1");
+
+        servoDropper = hardwareMap.servo.get("servo_dropper");
+        servoZiplineBlue = hardwareMap.servo.get("servo_ziplineBlue");
+        servoZiplineRed = hardwareMap.servo.get("servo_ziplineRed");
+    }
+
+    public void loop(){
+        //movement
+        leftPower = gamepad2.left_stick_y-gamepad2.left_stick_x;
+        rightPower = gamepad2.left_stick_y+gamepad2.left_stick_x;
+        leftPower = Range.clip(leftPower, -1, 1);
+        rightPower = Range.clip(rightPower, -1, 1);
+        leftPower = (float)scaleInput(leftPower);
+        rightPower = (float)scaleInput(rightPower);
+        motorLeft.setPower((double) leftPower);
+        motorRight.setPower((double) rightPower);
+        telemetry.addData("Drive", "Left: " + String.format("%.2f", leftPower) + " " + "Right: " + String.format("%.2f", rightPower));
+
+        //spool
+//        if (gamepad2.left_bumper == true){
+//            motorSpoolHeight.setPower(0.2);
+//        }
+//        if (gamepad2.left_trigger > 0.5){
+//            motorSpoolHeight.setPower(-0.2);
+//        }
+        spoolHPower = gamepad1.right_stick_y/2;
+        spoolHPower = Range.clip(spoolHPower, -1, 1);
+        spoolHPower = (float)scaleInput(spoolHPower);
+        motorSpoolHeight.setPower((double) spoolHPower);
+        spoolLPower = gamepad1.left_stick_y/5;
+        spoolLPower = Range.clip(spoolLPower, -1, 1);
+        spoolLPower = (float)scaleInput(spoolLPower);
+        motorSpoolLength.setPower((double)spoolLPower);
+
+        //dropper
+        if (gamepad1.a == true && isDropperDown == false) {
+            //servoDropper.setPosition();
+        }
+        if (gamepad1.a == true && isDropperDown == true){
+            //servoDropper.setPosition();
+        }
+
+        //zipline ones
+//        if ()
+
+
+
+
+        telemetry.addData("Time ", "Time: " + String.format("%.2f", time));
+    }
+
+    public void stop(){
+
+    }
+
+    double scaleInput(double dVal)  {
+        double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
+                0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
+
+        // get the corresponding index for the scaleInput array.
+        int index = (int) ((dVal/MAX_JOYSTICK_VALUE) * 16.0); //number is now <= 1
+
+        // index should be positive.
+        if (index < 0) {
+            index = -index;
+        }
+
+        // index cannot exceed size of array minus 1.
+        if (index > 16) {
+            index = 16;
+        }
+
+        // get value from the array.
+        double dScale = 0.0;
+        if (dVal < 0) {
+            dScale = -scaleArray[index];
+        } else {
+            dScale = scaleArray[index];
+        }
+
+        // return scaled value.
+        return dScale;
+    }
+}
