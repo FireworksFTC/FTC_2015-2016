@@ -2,69 +2,103 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by appx on 10/23/15.
  */
-public class MainTeleOp extends OpMode {
+public class TestTeleOp extends OpMode {
 
-    DcMotor motorRight;
-    DcMotor motorLeft;
-    Servo servo1, servo2;
+
+    DcMotor motorRight, motorLeft;
+    DcMotor motorSpoolHeight, motorSpoolLength;
+    Servo servoDropper, servoZiplineRed, servoZiplineBlue;
 
     float leftPower, rightPower;
+    float spoolHPower, spoolLPower;
     final double MAX_JOYSTICK_VALUE = 1.414;
 
-    boolean isDoorUp = false;
-    double doorWait;
+//    final double MAX_ZIPLINE_VALUE = ;
+    final double WAIT_TIME = 1.0;
+    double dropperWait, ziplineWait;
 
-    double position = -1;
+    boolean isDropperDown = false;
 
-    public MainTeleOp(){
+    double servoPositon = 0.75, servoPosition2 = 0.75;
+
+    public TestTeleOp(){
 
     }
 
     public void init(){
         motorRight = hardwareMap.dcMotor.get("motor_2");
         motorLeft = hardwareMap.dcMotor.get("motor_1");
-        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+        motorRight.setDirection(DcMotor.Direction.REVERSE);
 
-        servo1 = hardwareMap.servo.get("servo_1");
-        servo2 = hardwareMap.servo.get("servo_2");
-        servo1.setDirection(Servo.Direction.REVERSE);
+
+        motorSpoolHeight = hardwareMap.dcMotor.get("motor_angle");
+        motorSpoolLength = hardwareMap.dcMotor.get("motor_spool");
+
+        servoDropper = hardwareMap.servo.get("servo_dropper");
+        servoZiplineBlue = hardwareMap.servo.get("servo_ziplineBlue");
+        servoZiplineRed = hardwareMap.servo.get("servo_ziplineRed");
+        servoZiplineBlue.setDirection(Servo.Direction.REVERSE);
+
+        dropperWait = 2;
     }
 
     public void loop(){
         //movement
-        leftPower = gamepad1.right_stick_y-gamepad1.right_stick_x;
-        rightPower = gamepad1.right_stick_y+gamepad1.right_stick_x;
-        telemetry.addData("Raw Values", "Raw left: "+String.format("%.2f",leftPower) + "  Raw right: "+String.format("%.2f",rightPower));
-
+        leftPower = gamepad2.left_stick_y-gamepad2.left_stick_x;
+        rightPower = gamepad2.left_stick_y+gamepad2.left_stick_x;
         leftPower = Range.clip(leftPower, -1, 1);
         rightPower = Range.clip(rightPower, -1, 1);
-
         leftPower = (float)scaleInput(leftPower);
         rightPower = (float)scaleInput(rightPower);
+        motorLeft.setPower((double) leftPower);
+        motorRight.setPower((double) rightPower);
+        telemetry.addData("Drive", "Left: " + String.format("%.2f", leftPower) + " " + "Right: " + String.format("%.2f", rightPower));
 
-        motorLeft.setPower((double)leftPower);
-        motorRight.setPower((double)rightPower);
-        telemetry.addData("Powers", "Left: "+String.format("%.2f", leftPower) + " " + "Right: "+String.format("%.2f", rightPower));
+        //spool
+        spoolHPower = gamepad1.right_stick_y/2;
+        spoolHPower = Range.clip(spoolHPower, -1, 1);
+        spoolHPower = (float)scaleInput(spoolHPower);
+        motorSpoolHeight.setPower((double) spoolHPower);
+        spoolLPower = gamepad1.left_stick_y/2;
+        spoolLPower = Range.clip(spoolLPower, -1, 1);
+        spoolLPower = (float)scaleInput(spoolLPower);
+        motorSpoolLength.setPower((double)spoolLPower);
 
-        if (gamepad1.a == true && doorWait < time){
-            if (isDoorUp == true){
-                isDoorUp = false;
-                servo1.setPosition(0.46);
-                servo2.setPosition(0.46);
-                doorWait = time + 1;
-            } else {
-                isDoorUp = true;
-                servo1.setPosition(0.53);
-                servo2.setPosition(0.53);
-                doorWait = time + 1;
-            }
+        //window wipers/zipline :3
+        if (gamepad2.x  == true && ziplineWait < time){
+            servoZiplineBlue.setPosition(0.125);
+            servoZiplineRed.setDirection(Servo.Direction.REVERSE);
+            servoZiplineRed.setPosition(0.125);
+            ziplineWait = time + WAIT_TIME;
         }
+        if (gamepad2.b  == true && ziplineWait < time){
+            servoZiplineBlue.setPosition(0.75);
+            servoZiplineRed.setDirection(Servo.Direction.FORWARD);
+            servoZiplineRed.setPosition(0.75);
+            ziplineWait = time + WAIT_TIME;
+        }
+        telemetry.addData("Servo Position1", String.format("%.5f", servoPositon));
+
+        //dropper - compensate for continuous servo
+//        if (gamepad1.dpad_up == true){
+//            servoPosition2 += 0.01;
+//        }
+//        if (gamepad1.dpad_down == true){
+//            servoPosition2 -= 0.01;
+//        }
+//        if (gamepad1.b == true){
+//            servoPosition2 = 0.5;
+//        }
+//        telemetry.addData("Servo Position", String.format("%.5f", servoPosition2));
+//        servoDropper.setPosition(servoPosition2);
+        
+        telemetry.addData("Time ", "Time: " + String.format("%.2f", time));
     }
 
     public void stop(){
