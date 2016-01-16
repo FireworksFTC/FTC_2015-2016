@@ -3,82 +3,81 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.LightSensor;
 
-/**
- * Created by appx on 10/23/15.
- */
 public class TestColorSensor extends OpMode {
-    
+
     LightSensor lSensorR, lSensorL;
 
     final double MEASURING_TIME = 2.0;
-    double startTime;
+    double lightStartTime;
 
-    int totalLightL, avgLightL = 0, countL;
-    int totalLightR, avgLightR = 0, countR;
+    int totalLightL, avgLightL = 0, count;
     boolean isScanningForLight;
-    String redLight = "N/A";
+    double rightPower, leftPower;
+    int pushLight;
+    String desiredLight = "red", desiredLightPosition = "N/A";
 
-    public TestColorSensor(){
-
-    }
-
-    public void init(){
+    @Override
+    public void init() {
         lSensorL = hardwareMap.lightSensor.get("light_sensor_left");
-        lSensorR = hardwareMap.lightSensor.get("light_sensor_right");
 
         isScanningForLight = false;
     }
 
-    //subtract 20 from lSensorL make an approximate ratio (calibration)
-    public void init_loop(){
-
+    @Override
+    public void loop() {
+        rightPower = 0;
+        leftPower = 0;
+        pushLight = pushLight();
+        if (pushLight <0){
+            ; //wait for scanning to end
+        } else if (pushLight ==1){
+            rightPower = -0.10;
+            leftPower = 0.10;
+        } else if (pushLight ==2){
+            rightPower = 0.10;
+            leftPower = -0.10;
+        }
     }
 
-    public void loop(){
-        telemetry.addData("Time ", String.format("%.2f", time));
-
-        //lower numbers = brighter light
-        //blue is higher than red (but only slightly)
-        if(gamepad2.x == true){
-            if(isScanningForLight == false) {
-                isScanningForLight = true;
-                startTime = time;
-                countR = 0;
-                totalLightR = 0;
-                countL = 0;
-                totalLightL = 0;
-            }
+    int pushLight() {
+        if (isScanningForLight == false) {
+            isScanningForLight = true;
+            lightStartTime = time;
+            count = 0;
+            totalLightL = 0;
         }
-        if(isScanningForLight == true){
-            telemetry.addData("Light Time: ", String.format("%.2f", time)+" "+String.format("%.2f", startTime));
-            totalLightR += lSensorR.getLightDetectedRaw();
+
+        if (isScanningForLight == true) {
+            //blue light is > than red light
             totalLightL += lSensorL.getLightDetectedRaw();
-            countR++;
-            countL++;
+            count++;
 
-            if (time > startTime+MEASURING_TIME){
+            if (time > lightStartTime + MEASURING_TIME) {
                 isScanningForLight = false;
-                avgLightR = totalLightR/countR;
-                avgLightL = (totalLightL/countL) - 20; //-20 for calibration
+                avgLightL = (totalLightL / count) - 20; //-20 for calibration
 
-                if(avgLightL > avgLightR){
-                    redLight = "Right";
+                if (desiredLight.toLowerCase().equals("red")) {
+                    if (avgLightL > 205) { //the red light is on the right
+                        return 1;
+                    }
+                    if (avgLightL < 205) { //the red light is on the left
+                        return 2;
+                    }
                 }
-                if (avgLightL < avgLightR){
-                    redLight = "Left";
+
+                if (desiredLight.toLowerCase().equals("blue")) {
+                    if (avgLightL < 205) { //the blue light is on the right
+                        return 1;
+                    }
+                    if (avgLightL > 205) { //the blue light is on the left
+                        return 2;
+                    }
                 }
-                if (avgLightL == avgLightR){
-                    redLight = "Error: They're the same";
-                }
+            } else {
+                return -1;
             }
         }
 
-        telemetry.addData("Average Light", "Right-"+String.format("%d", avgLightR) + " " + "Left-"+String.format("%d", avgLightL));
-        telemetry.addData("Red Light is", redLight);
+        return  0;
     }
-
-    public void stop(){
-
-    }
-
 }
